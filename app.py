@@ -18,7 +18,7 @@ from PIL import Image
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
 from preprocessing import preprocess_image
-from segmentation  import segment_image
+from segmentation  import segment_image, find_sign_bbox
 from features      import extract_hog_visual, extract_hog
 from classifier    import load_model, predict
 from utils         import GTSRB_CLASSES
@@ -79,7 +79,12 @@ if uploaded is not None:
         st.stop()
 
     # ── Run pipeline ──────────────────────────────────────────────────────────
-    hsv_norm        = preprocess_image(bgr)
+    # Crop to detected sign region before resizing so background doesn't
+    # pollute HOG — GTSRB training images were already tight ROI crops.
+    x1, y1, x2, y2 = find_sign_bbox(bgr)
+    bgr_cropped     = bgr[y1:y2, x1:x2] if (x2 - x1) > 10 and (y2 - y1) > 10 else bgr
+
+    hsv_norm        = preprocess_image(bgr_cropped)
     segmented, mask = segment_image(hsv_norm)
     # HOG is extracted from the full preprocessed image (not segmented) to
     # match training — train.py never applies segmentation before HOG.
@@ -89,10 +94,10 @@ if uploaded is not None:
     st.subheader("Pipeline Steps")
     col1, col2, col3, col4, col5 = st.columns(5)
 
-    # Original (convert BGR→RGB for display)
+    # Original — show cropped region so user sees what the model received
     with col1:
-        st.markdown("**1 · Original**")
-        rgb_orig = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
+        st.markdown("**1 · Auto-cropped**")
+        rgb_orig = cv2.cvtColor(bgr_cropped, cv2.COLOR_BGR2RGB)
         st.image(rgb_orig, use_container_width=True)
 
     # Preprocessed HSV — display V channel as grayscale for readability
