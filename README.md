@@ -23,15 +23,14 @@ Load Data → Preprocessing → Segmentation → Feature Extraction → Classifi
 ```
 traffic_sign_recognition/
 ├── data/
-│   ├── raw/          # Original GTSRB images (not tracked in git)
-│   └── processed/    # Cached feature arrays (optional)
+│   └── raw/          # Original GTSRB images (not tracked in git)
 ├── src/
 │   ├── preprocessing.py
 │   ├── segmentation.py
 │   ├── features.py
 │   ├── classifier.py
 │   └── utils.py      # Class names (0–42), JSON save, dir helpers
-├── notebooks/        # Exploratory notebooks
+├── Test Signs/       # Sample images for testing the demo app
 ├── results/          # svm_model.pkl, metrics.json, confusion_matrix.png
 ├── train.py          # CLI training script
 ├── app.py            # Streamlit demo app
