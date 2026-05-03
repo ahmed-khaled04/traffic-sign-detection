@@ -13,7 +13,7 @@ Load Data → Preprocessing → Segmentation → Feature Extraction → Classifi
 | Step | Module | Description |
 |---|---|---|
 | Load Data | `train.py` | Read PPM images + ROI annotations from GTSRB CSV |
-| Preprocessing | `src/preprocessing.py` | Crop ROI, resize to 32×32, normalize to [0,1], BGR→HSV |
+| Preprocessing | `src/preprocessing.py` | Crop ROI, resize to 64×64, normalize to [0,1], BGR→HSV |
 | Segmentation | `src/segmentation.py` | HSV color masking (red / blue / yellow) |
 | Feature Extraction | `src/features.py` | HOG — 9 orientations, 8×8 cells, 2×2 blocks, L2-Hys norm |
 | Classification | `src/classifier.py` | StandardScaler → SVM (RBF kernel, C=10, γ=0.001) |
@@ -77,7 +77,7 @@ Outputs saved to `results/`:
 streamlit run app.py
 ```
 
-Upload any traffic sign image and see each pipeline step visualized.
+Upload any traffic sign image and see each pipeline step visualized. The app automatically detects and crops to the sign region before classification, so photos with background clutter are handled correctly.
 
 ## Stack
 
