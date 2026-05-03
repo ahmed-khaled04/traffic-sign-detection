@@ -40,6 +40,9 @@ ENV/
 # Streamlit
 .streamlit/secrets.toml
 
+# Claude Code
+CLAUDE.md
+
 # Misc
 *.log
 *.tmp
