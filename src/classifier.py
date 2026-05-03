@@ -19,7 +19,7 @@ def build_pipeline() -> Pipeline:
     """Return an unfitted StandardScaler → SVC(RBF) pipeline."""
     return Pipeline([
         ("scaler", StandardScaler()),
-        ("svm",    SVC(kernel="rbf", C=10, gamma=0.001, probability=True, random_state=42)),
+        ("svm",    SVC(kernel="rbf", C=10, gamma=0.001, cache_size=2000, random_state=42)),
     ])
 
 
@@ -77,9 +77,13 @@ def predict(model: Pipeline, feature_vector: np.ndarray) -> Tuple[int, float]:
     Returns
     -------
     class_id    : int
-    confidence  : float (probability of predicted class)
+    confidence  : float in [0, 1] derived from decision function via softmax
     """
     X = feature_vector.reshape(1, -1)
-    class_id    = int(model.predict(X)[0])
-    confidence  = float(model.predict_proba(X)[0, class_id])
+    class_id = int(model.predict(X)[0])
+    scores = model.decision_function(X)[0]
+    # softmax over decision scores for a calibrated confidence value
+    scores = scores - scores.max()
+    exp_scores = np.exp(scores)
+    confidence = float(exp_scores[class_id] / exp_scores.sum())
     return class_id, confidence

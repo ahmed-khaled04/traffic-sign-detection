@@ -1,8 +1,8 @@
 """
-features.py — HOG feature extraction.
+features.py — HOG + color histogram feature extraction.
 
-Converts segmented HSV images to grayscale and computes Histogram of
-Oriented Gradients (HOG) descriptors for use as classifier input.
+Converts HSV images to grayscale for HOG and also computes per-channel
+HSV histograms. Both are concatenated into a single feature vector.
 """
 
 from typing import List, Tuple
@@ -20,6 +20,8 @@ _HOG_PARAMS = dict(
     transform_sqrt=True,
 )
 
+_COLOR_BINS = 32
+
 
 def _to_gray(hsv_image: np.ndarray) -> np.ndarray:
     """Convert a normalized float32 HSV image to a uint8 grayscale image."""
@@ -28,43 +30,54 @@ def _to_gray(hsv_image: np.ndarray) -> np.ndarray:
     return cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)
 
 
+def _color_histogram(hsv_image: np.ndarray) -> np.ndarray:
+    """Normalized concatenated histogram over H, S, V channels."""
+    h = np.histogram(hsv_image[:, :, 0], bins=_COLOR_BINS, range=(0.0, 1.0))[0]
+    s = np.histogram(hsv_image[:, :, 1], bins=_COLOR_BINS, range=(0.0, 1.0))[0]
+    v = np.histogram(hsv_image[:, :, 2], bins=_COLOR_BINS, range=(0.0, 1.0))[0]
+    hist = np.concatenate([h, s, v]).astype(np.float64)
+    return hist / (hist.sum() + 1e-7)
+
+
 def extract_hog(image: np.ndarray) -> np.ndarray:
     """
-    Compute a flat HOG feature vector for one image.
+    Compute HOG + color histogram feature vector for one image.
 
     Parameters
     ----------
-    image : float32 ndarray (32, 32, 3), normalized HSV (segmented)
+    image : float32 ndarray (64, 64, 3), normalized HSV
 
     Returns
     -------
-    1-D float64 ndarray of HOG features
+    1-D float64 ndarray — HOG features concatenated with color histogram
     """
     gray = _to_gray(image)
-    features = hog(gray, **_HOG_PARAMS, visualize=False)
-    return features
+    hog_features = hog(gray, **_HOG_PARAMS, visualize=False)
+    color_features = _color_histogram(image)
+    return np.concatenate([hog_features, color_features])
 
 
 def extract_hog_visual(image: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     """
-    Compute HOG features and return the visualization image alongside them.
+    Compute HOG + color histogram features and return the HOG visualization.
 
     Returns
     -------
     features  : 1-D float64 ndarray
-    hog_image : float64 ndarray (32, 32) suitable for display
+    hog_image : float64 ndarray (64, 64) suitable for display
     """
     gray = _to_gray(image)
-    features, hog_image = hog(gray, **_HOG_PARAMS, visualize=True)
-    return features, hog_image
+    hog_features, hog_image = hog(gray, **_HOG_PARAMS, visualize=True)
+    color_features = _color_histogram(image)
+    return np.concatenate([hog_features, color_features]), hog_image
 
 
 def extract_features_batch(images: List[np.ndarray]) -> np.ndarray:
     """
-    Extract HOG features for a list of images.
+    Extract HOG + color histogram features for a list of images.
 
     Returns
     -------
-    float64 ndarray of shape (N, D) where D is the HOG vector length
+    float64 ndarray of shape (N, D)
     """
     return np.stack([extract_hog(img) for img in images], axis=0)

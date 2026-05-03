@@ -1,7 +1,7 @@
 """
 preprocessing.py — Image loading and preprocessing pipeline.
 
-Loads raw GTSRB images from disk, crops to ROI, resizes to 32×32,
+Loads raw GTSRB images from disk, crops to ROI, resizes to 64×64,
 converts BGR→HSV, and normalizes to float32 [0, 1].
 """
 
@@ -72,9 +72,9 @@ def preprocess_image(image: np.ndarray) -> np.ndarray:
 
     Returns
     -------
-    float32 ndarray of shape (32, 32, 3) in HSV color space, values in [0, 1]
+    float32 ndarray of shape (64, 64, 3) in HSV color space, values in [0, 1]
     """
-    resized = cv2.resize(image, (32, 32), interpolation=cv2.INTER_AREA)
+    resized = cv2.resize(image, (64, 64), interpolation=cv2.INTER_AREA)
     hsv = cv2.cvtColor(resized, cv2.COLOR_BGR2HSV)
     normalized = hsv.astype(np.float32) / np.array([179.0, 255.0, 255.0], dtype=np.float32)
     return normalized
@@ -86,6 +86,6 @@ def preprocess_batch(images: List[np.ndarray]) -> np.ndarray:
 
     Returns
     -------
-    float32 ndarray of shape (N, 32, 32, 3)
+    float32 ndarray of shape (N, 64, 64, 3)
     """
     return np.stack([preprocess_image(img) for img in images], axis=0)

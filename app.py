@@ -36,11 +36,10 @@ with st.sidebar:
     st.title("🚦 Traffic Sign Recognition")
     st.markdown("**Pipeline**")
     st.markdown("""
-1. Resize → 32×32
+1. Resize → 64×64
 2. BGR → HSV + Normalize
-3. Color-based segmentation
-4. HOG feature extraction
-5. SVM classification
+3. HOG + Color Histogram features
+4. SVM classification
 """)
     st.divider()
     model_path = st.text_input("Model path", value="results/svm_model.pkl")
@@ -80,9 +79,11 @@ if uploaded is not None:
         st.stop()
 
     # ── Run pipeline ──────────────────────────────────────────────────────────
-    hsv_norm       = preprocess_image(bgr)
+    hsv_norm        = preprocess_image(bgr)
     segmented, mask = segment_image(hsv_norm)
-    features, hog_img = extract_hog_visual(segmented)
+    # HOG is extracted from the full preprocessed image (not segmented) to
+    # match training — train.py never applies segmentation before HOG.
+    features, hog_img = extract_hog_visual(hsv_norm)
 
     # ── Pipeline visualization strip ──────────────────────────────────────────
     st.subheader("Pipeline Steps")
