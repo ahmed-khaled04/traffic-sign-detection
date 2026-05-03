@@ -55,6 +55,42 @@ def apply_mask(image: np.ndarray, mask: np.ndarray) -> np.ndarray:
     return cv2.bitwise_and(image, image, mask=mask)
 
 
+def find_sign_bbox(bgr_image: np.ndarray, padding: float = 0.05) -> Tuple[int, int, int, int]:
+    """
+    Detect the bounding box of the largest sign-colored region in a BGR image.
+
+    Parameters
+    ----------
+    bgr_image : uint8 BGR ndarray of any size
+    padding   : fractional padding added around the detected box (default 5%)
+
+    Returns
+    -------
+    (x1, y1, x2, y2) pixel coordinates on bgr_image, or the full image bounds
+    if no sign region is detected.
+    """
+    h, w = bgr_image.shape[:2]
+    small = cv2.resize(bgr_image, (128, 128))
+    hsv = cv2.cvtColor(small, cv2.COLOR_BGR2HSV).astype(np.float32)
+    hsv /= np.array([179.0, 255.0, 255.0], dtype=np.float32)
+    mask = create_color_mask(hsv)
+
+    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    if not contours:
+        return 0, 0, w, h
+
+    cx, cy, cw, ch = cv2.boundingRect(max(contours, key=cv2.contourArea))
+    # scale bbox from 128×128 back to original resolution
+    scale_x, scale_y = w / 128.0, h / 128.0
+    pad_x = int(cw * scale_x * padding)
+    pad_y = int(ch * scale_y * padding)
+    x1 = max(0, int(cx * scale_x) - pad_x)
+    y1 = max(0, int(cy * scale_y) - pad_y)
+    x2 = min(w, int((cx + cw) * scale_x) + pad_x)
+    y2 = min(h, int((cy + ch) * scale_y) + pad_y)
+    return x1, y1, x2, y2
+
+
 def segment_image(hsv_image: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     """
     Segment a preprocessed HSV image by its sign colors.
