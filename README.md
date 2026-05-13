@@ -43,7 +43,9 @@ traffic_sign_recognition/
 pip install -r requirements.txt
 ```
 
-Place the GTSRB dataset at `data/raw/archive/`:
+Download the dataset from Kaggle: [GTSRB — German Traffic Sign Recognition Benchmark](https://www.kaggle.com/datasets/meowmeowmeowmeowmeow/gtsrb-german-traffic-sign)
+
+Place it at `data/raw/archive/`:
 
 ```
 data/raw/archive/
@@ -77,6 +79,10 @@ streamlit run app.py
 ```
 
 Upload any traffic sign image and see each pipeline step visualized. The app automatically detects and crops to the sign region before classification, so photos with background clutter are handled correctly.
+
+## Demo
+
+[Watch the demo video](https://drive.google.com/file/d/1aUyE2w7NPgLDdywIaEV3Yjpbs_xBcCFA/view?usp=sharing)
 
 ## Stack
 
